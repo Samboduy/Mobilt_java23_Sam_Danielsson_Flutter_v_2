@@ -1,5 +1,6 @@
 
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -12,14 +13,25 @@ class MyUserPage extends StatefulWidget {
   State<MyUserPage> createState() => _MyHomePageState();
 }
 
+ Future<void> stuff() async {
+   FirebaseFirestore db = FirebaseFirestore.instance;
+   await db.collection("users").get().then((event) {
+     for (var doc in event.docs) {
+       debugPrint("${doc.id} => ${doc.data()}");
+     }
+   });
+ }
+
 class _MyHomePageState extends State<MyUserPage> {
 
-  void change(){
 
-  }
+
+  void change(){}
+
   @override
   Widget build(BuildContext context) {
     Color? pink = Colors.pink[50];
+    FirebaseFirestore db;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -82,8 +94,15 @@ class _MyHomePageState extends State<MyUserPage> {
                           ),
                           color: Colors.white
                         ),
-                        child:TextButton(onPressed:(){
-
+                        child:TextButton(onPressed:() async =>{
+                            db = FirebaseFirestore.instance,
+                            await db.collection("users").get().then((event) {
+                          for (var doc in event.docs) {
+                            debugPrint("${doc.id} => ${doc.data()}");
+                          }
+                        }),
+                         // print("Sam"),
+                         // stuff(),
                         },
                             child: const Text("Change")),
                       ),
