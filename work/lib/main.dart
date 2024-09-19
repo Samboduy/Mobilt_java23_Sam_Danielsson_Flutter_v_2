@@ -2,16 +2,55 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:work/UserPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
 
-Future<void> main() async { //setup  async await db init
+
+final TextEditingController emailController = TextEditingController();
+final TextEditingController passwordController = TextEditingController();
+Future<void> main() async {//setup  async await db init
+
+
+    emailController.text = "sam.danielsson@gritacademy.se";
+    passwordController.text = "kotlin";
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const MyApp());
 }
+const loggedInSnackBar = SnackBar(
+  content: Text('logged in!'),
+);
+
+
+ Future<void> getUser(context, String email, String password) async {
+
+     try {
+       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+           email: email,
+           password: password
+       );
+       if(credential.user!=null){
+         emailController.clear();
+         passwordController.clear();
+         ScaffoldMessenger.of(context).showSnackBar(loggedInSnackBar);
+         Navigator.pushNamed(context, '/userPage');
+       }
+       //ScaffoldMessenger.of(context).showSnackBar(loggedInSnackBar);
+
+     } on FirebaseAuthException catch (e) {
+       if (e.code == 'user-not-found') {
+         print('No user found for that email.');
+       } else if (e.code == 'wrong-password') {
+         print('Wrong password provided for that user.');
+       }
+
+     }
+   }
+
 
 
 class MyApp extends StatelessWidget {
@@ -48,14 +87,23 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
- void login(){
 
- }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
    Color? pink = Colors.pink[50];
    const double margin = 5.0;
    const double containerWidth = 400.0;
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -80,6 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
               margin:const EdgeInsets.all(margin),
           child:
           TextFormField(
+            controller: emailController,
             decoration: const InputDecoration(
                 contentPadding: EdgeInsets.all(5),
                 hintText: "Enter Your Email"
@@ -91,6 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: containerWidth,
                 margin:const EdgeInsets.all(margin),
                 child: TextFormField(
+                  controller: passwordController,
                      decoration: const InputDecoration(
                         contentPadding: EdgeInsets.all(5),
                         hintText:  "Enter Your Password"
@@ -100,10 +150,19 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               color: pink,
               margin:const EdgeInsets.all(margin),
-              child: FilledButton(onPressed:(){
-                Navigator.pushNamed(context, '/userPage');
-              }, child:Text("Login"))
-              ,
+              child: FilledButton(onPressed:() async =>{
+                getUser(context,emailController.text,passwordController.text),
+
+              }, child:Text("Login")),
+
+            ),Container(
+              color: pink,
+              margin:const EdgeInsets.all(margin),
+              child: FilledButton(onPressed:() {
+                FirebaseAuth.instance.signOut();
+
+              }, child:Text("Logout")),
+
             ),
           ],
         ),
